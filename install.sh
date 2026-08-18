@@ -85,7 +85,7 @@ case "$(uname -m)" in
 esac
 
 case "$platform-$architecture" in
-    darwin-arm64|linux-x86_64) ;;
+    darwin-arm64|linux-x86_64|linux-arm64) ;;
     *)
         die "no published binary for $platform-$architecture; build from source"
         ;;
@@ -105,6 +105,17 @@ if [ "$variant" = auto ]; then
         variant=xpu
     else
         variant=cpu
+    fi
+fi
+
+# Only the cpu variant is published for linux-arm64 (no CUDA/ROCm/XPU
+# binaries on ARM). Auto-detection may still see a GPU (e.g. Jetson's
+# nvidia-smi) — downgrade auto to cpu; reject an explicit GPU request.
+if [ "$platform-$architecture" = linux-arm64 ] && [ "$variant" != cpu ]; then
+    if [ "$requested_variant" = auto ]; then
+        variant=cpu
+    else
+        die "the $variant variant is not published for linux-arm64; only cpu is available"
     fi
 fi
 

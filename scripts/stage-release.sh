@@ -32,7 +32,8 @@ esac
 
 case "$platform-$architecture-$variant" in
     darwin-arm64-cpu|darwin-arm64-metal|linux-x86_64-cpu|\
-    linux-x86_64-cuda|linux-x86_64-rocm|linux-x86_64-xpu) ;;
+    linux-x86_64-cuda|linux-x86_64-rocm|linux-x86_64-xpu|\
+    linux-arm64-cpu) ;;
     *) die "unsupported release asset: $platform-$architecture-$variant" ;;
 esac
 

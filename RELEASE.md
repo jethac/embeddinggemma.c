@@ -9,19 +9,20 @@ not wrap binary assets in tarballs or zip files.
 - Obtain explicit approval for the exact version before editing `VERSION`,
   creating a tag, or publishing a release.
 - Build every binary from the same clean release commit.
-- Publish all six executables on every release, even when only one backend
+- Publish all seven executables on every release, even when only one backend
   changed.
 - Do not publish model weights, GGUF files, standalone metallibs, object files,
   debug bundles, or dependency source trees.
 - Keep the stable asset names below. The installer depends on them.
 - Strip each executable. Ad-hoc sign and verify both Darwin executables.
-- Publish `SHA256SUMS` covering exactly the six executable assets.
+- Publish `SHA256SUMS` covering exactly the seven executable assets.
 
 Expected assets:
 
 ```text
 embeddinggemma-darwin-arm64-cpu
 embeddinggemma-darwin-arm64-metal
+embeddinggemma-linux-arm64-cpu
 embeddinggemma-linux-x86_64-cpu
 embeddinggemma-linux-x86_64-cuda
 embeddinggemma-linux-x86_64-rocm
@@ -114,6 +115,29 @@ ldd /tmp/embeddinggemma-dist/embeddinggemma-linux-x86_64-cpu
 ```
 
 Review `ldd` output for unexpected non-system dependencies.
+
+## Linux ARM64 CPU
+
+Build on any aarch64 Linux host. An Apple Silicon Mac works via Docker — the
+arm64 container runs natively (no emulation). Use an old-glibc base image
+(Debian bullseye, glibc 2.31) so the executable runs on older distributions;
+the staged binary's actual symbol ceiling is GLIBC_2.27.
+
+```sh
+docker run --rm --platform linux/arm64 -v "$worktree:/src" -w /src \
+  debian:bullseye bash -c '
+    apt-get update -qq && apt-get install -y -qq build-essential python3 file
+    make test BUILD=build-linux-arm64
+    make release-linux-cpu BUILD=build-linux-arm64 DIST=/tmp/embeddinggemma-dist
+    python3 testdata/test_http_dimensions.py \
+      --binary /tmp/embeddinggemma-dist/embeddinggemma-linux-arm64-cpu \
+      --model model/embeddinggemma-300M-qat-Q4_0.gguf --backend cpu
+    ldd /tmp/embeddinggemma-dist/embeddinggemma-linux-arm64-cpu'
+```
+
+Only the cpu variant is published for linux-arm64; `install.sh` downgrades
+auto-detected GPU variants to cpu on this platform (no CUDA/ROCm/XPU ARM
+binaries).
 
 ## Linux X86_64 CUDA
 
