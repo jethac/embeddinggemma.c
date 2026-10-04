@@ -57,7 +57,9 @@ static int ei_setsockopt(ei_socket fd, int level, int name,
 #define MAX_BODY_BYTES (16u * 1024u * 1024u)
 #define MAX_HEADER_BYTES (64u * 1024u)
 
+#ifndef _WIN32
 extern char **environ;
+#endif
 
 #if defined(EI_ENABLE_ROCM)
 #define DEFAULT_INFERENCE_BACKEND "rocm"
